@@ -13,7 +13,7 @@
 ## Description
 
 `nestjs-rate-limiter` is a module which adds in configurable rate limiting for [NestJS](https://github.com/nestjs/nest)
-applications.
+applications. It supports Express and Fastify.
 
 Under the hood it uses [rate-limiter-flexible](https://github.com/animir/node-rate-limiter-flexible).
 
@@ -31,7 +31,7 @@ yarn add nestjs-rate-limiter
 
 ### Requirements
 
-`nestjs-rate-limiter` is built to work with NestJS 6.x versions.
+`nestjs-rate-limiter` is built to work with NestJS 7.x versions.
 
 ## Usage
 
