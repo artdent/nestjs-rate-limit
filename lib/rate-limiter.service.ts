@@ -12,10 +12,8 @@ import {
 import { Injectable, Inject, ExecutionContext, HttpException, HttpStatus } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
-import { RATE_LIMITER_OPTIONS } from './rate-limiter.constants';
+import { RATE_LIMITER_OPTIONS, RATE_LIMITER_TOKEN, REFLECTOR } from './rate-limiter.constants';
 import { RateLimiterModuleOptions } from './rate-limiter.interface';
-
-const REFLECTOR = 'Reflector';
 
 @Injectable()
 export class RateLimiterService {
@@ -38,18 +36,10 @@ export class RateLimiterService {
         const { type, pointsConsumed, ...libraryArguments } = limiterOptions;
 
         if (!rateLimiter) {
-            if (limiterOptions.type === 'Memory') {
-                rateLimiter = new RateLimiterMemory(libraryArguments);
-
-                console.log('Created RateLimiterMemory with keyPrefix =', keyPrefix);
-            } else if (limiterOptions.type === 'Redis') {
+            if (limiterOptions.type === 'Redis') {
                 rateLimiter = new RateLimiterRedis(libraryArguments as IRateLimiterStoreOptions);
-
-                console.log('Created RateLimiterRedis with keyPrefix =', keyPrefix);
             } else if (limiterOptions.type === 'Memcache') {
                 rateLimiter = new RateLimiterMemcache(libraryArguments as IRateLimiterStoreOptions);
-
-                console.log('Created RateLimiterMemcache with keyPrefix =', keyPrefix);
             } else if (limiterOptions.type === 'Postgres') {
                 rateLimiter = await new Promise((resolve, reject) => {
                     const limiter = new RateLimiterPostgres(libraryArguments as IRateLimiterStoreOptions, err => {
@@ -60,8 +50,6 @@ export class RateLimiterService {
                         }
                     });
                 });
-
-                console.log('Created RateLimiterPostgres with keyPrefix =', keyPrefix);
             } else if (limiterOptions.type === 'MySQL') {
                 rateLimiter = await new Promise((resolve, reject) => {
                     const limiter = new RateLimiterMySQL(libraryArguments as IRateLimiterStoreOptions, err => {
@@ -72,12 +60,8 @@ export class RateLimiterService {
                         }
                     });
                 });
-
-                console.log('Created RateLimiterMySQL with keyPrefix =', keyPrefix);
             } else {
-                throw new Error(
-                    `Invalid "type" option provided to RateLimiterInterceptor. Value was "${limiterOptions.type}"`,
-                );
+                rateLimiter = new RateLimiterMemory(libraryArguments);
             }
 
             this.rateLimiters.set(keyPrefix, rateLimiter);
@@ -92,7 +76,7 @@ export class RateLimiterService {
         let keyPrefix: string = this.options.keyPrefix;
 
         const reflectedOptions: RateLimiterModuleOptions = this.reflector.get<RateLimiterModuleOptions>(
-            'rateLimit',
+            RATE_LIMITER_TOKEN,
             context.getHandler(),
         );
 
@@ -122,7 +106,7 @@ export class RateLimiterService {
         const response = context.switchToHttp().getResponse();
 
         if (!response.set && response.header) response.set = response.header;
-        else throw new Error('Cannot determine method to set response headers');
+        else if (!response.set) throw new Error('Cannot determine method to set response headers');
 
         const key = request.user ? request.user.id : request.ip;
 
