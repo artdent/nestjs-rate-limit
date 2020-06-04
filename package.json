@@ -1,6 +1,6 @@
 {
     "name": "nestjs-rate-limit",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "A configurable rate limiter for NestJS supporting Express and Fastify",
     "repository": {
         "type": "git",
@@ -10,9 +10,11 @@
         "nestjs",
         "nest",
         "rate",
-        "limit"
+        "limit",
+        "fastify",
+        "express"
     ],
-    "author": "Andre Callus  <andrecallus@outlook.com>",
+    "author": "Andre Callus <andrecallus@outlook.com>",
     "license": "MIT",
     "bugs": {
         "url": "https://github.com/acal11/nestjs-rate-limit"
@@ -40,6 +42,7 @@
     },
     "lint-staged": {
         "*.ts": [
+            "jest --bail —-findRelatedTests",
             "prettier --write",
             "git add -f"
         ]
