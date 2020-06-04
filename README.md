@@ -5,14 +5,14 @@
 <p align="center">Rate Limiter Module for NestJS</p>
 
 <p align="center">
-<a href="https://www.npmjs.com/package/nestjs-rate-limiter"><img src="https://img.shields.io/npm/v/nestjs-rate-limiter.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/package/nestjs-rate-limiter"><img src="https://img.shields.io/npm/l/nestjs-rate-limiter.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/package/nestjs-rate-limiter"><img src="https://img.shields.io/npm/dm/nestjs-rate-limiter.svg" alt="NPM Downloads" /></a>
+<a href="https://www.npmjs.com/package/nestjs-rate-limit"><img src="https://img.shields.io/npm/v/nestjs-rate-limit.svg" alt="NPM Version" /></a>
+<a href="https://www.npmjs.com/package/nestjs-rate-limit"><img src="https://img.shields.io/npm/l/nestjs-rate-limit.svg" alt="Package License" /></a>
+<a href="https://www.npmjs.com/package/nestjs-rate-limit"><img src="https://img.shields.io/npm/dm/nestjs-rate-limit.svg" alt="NPM Downloads" /></a>
 </p>
 
 ## Description
 
-`nestjs-rate-limiter` is a module which adds in configurable rate limiting for [NestJS](https://github.com/nestjs/nest)
+`nestjs-rate-limit` is a module which adds in configurable rate limiting for [NestJS](https://github.com/nestjs/nest)
 applications. It supports Express and Fastify.
 
 Under the hood it uses [rate-limiter-flexible](https://github.com/animir/node-rate-limiter-flexible).
@@ -20,18 +20,18 @@ Under the hood it uses [rate-limiter-flexible](https://github.com/animir/node-ra
 ## Installation
 
 ```bash
-npm i --save nestjs-rate-limiter
+npm i --save nestjs-rate-limit
 ```
 
 Or if you use Yarn:
 
 ```bash
-yarn add nestjs-rate-limiter
+yarn add nestjs-rate-limit
 ```
 
 ### Requirements
 
-`nestjs-rate-limiter` is built to work with NestJS 7.x versions.
+`nestjs-rate-limit` is built to work with NestJS 7.x versions.
 
 ## Usage
 
@@ -42,7 +42,7 @@ First you need to import this module into your main application module:
 > app.module.ts
 
 ```ts
-import { RateLimiterModule } from 'nestjs-rate-limiter';
+import { RateLimiterModule } from 'nestjs-rate-limit';
 
 @Module({
     imports: [RateLimiterModule],
@@ -57,7 +57,7 @@ Now you need to register the interceptor. You can do this only on some routes:
 > app.controller.ts
 
 ```ts
-import { RateLimiterInterceptor } from 'nestjs-rate-limiter';
+import { RateLimiterInterceptor } from 'nestjs-rate-limit';
 
 @UseInterceptors(RateLimiterInterceptor)
 @Get('/login')
@@ -72,7 +72,7 @@ Or you can choose to register the interceptor globally:
 
 ```ts
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { RateLimiterModule, RateLimiterInterceptor } from 'nestjs-rate-limiter';
+import { RateLimiterModule, RateLimiterInterceptor } from 'nestjs-rate-limit';
 
 @Module({
     imports: [RateLimiterModule],
@@ -93,7 +93,7 @@ Due to the execution order of NestJS, when using the interceptor the rate limite
 > app.controller.ts
 
 ```ts
-import { RateLimiterGuard } from 'nestjs-rate-limiter';
+import { RateLimiterGuard } from 'nestjs-rate-limit';
 
 @UseGuards(RateLimiterGuard)
 @Get('/login')
@@ -108,7 +108,7 @@ Or you can choose to register the guard globally:
 
 ```ts
 import { APP_GUARD } from '@nestjs/core';
-import { RateLimiterModule, RateLimiterGuard } from 'nestjs-rate-limiter';
+import { RateLimiterModule, RateLimiterGuard } from 'nestjs-rate-limit';
 
 @Module({
     imports: [RateLimiterModule],
@@ -130,7 +130,7 @@ route basis:
 > app.controller.ts
 
 ```ts
-import { RateLimit } from 'nestjs-rate-limiter';
+import { RateLimit } from 'nestjs-rate-limit';
 
 @RateLimit({ points: 1, duration: 60 })
 @Get('/signup')
@@ -155,7 +155,7 @@ duplicate `keyPrefix` or reuse the same class and method names with the decorato
 
 By default, the rate limiter will limit requests to 4 requests per 1 second window, using an in memory cache.
 
-To change the settings for `nestjs-rate-limiter`, you can define a `RateLimiterModuleOptions` object when registering
+To change the settings for `nestjs-rate-limit`, you can define a `RateLimiterModuleOptions` object when registering
 the module:
 
 > app.module.ts
@@ -163,10 +163,33 @@ the module:
 ```ts
 @Module({
     imports: [
-        RateLimiterModule.register({
+        RateLimiterModule.forRoot({
             points: 100,
             duration: 60,
             keyPrefix: 'global',
+        }),
+    ],
+    providers: [
+        {
+            provide: APP_INTERCEPTOR,
+            useClass: RateLimiterInterceptor,
+        },
+    ],
+})
+export class ApplicationModule {}
+```
+
+or
+
+> app.module.ts
+
+```ts
+@Module({
+    imports: [
+        RateLimiterModule.forRootAsync({
+            useFactory: (configService: ConfigService<Config>) =>
+                configService.get<AppConfig>(APP_CONFIG_TOKEN).rateLimiter,
+            inject: [ConfigService],
         }),
     ],
     providers: [
@@ -236,7 +259,7 @@ This defines the prefix used for all storage methods listed in the `type` option
 
 This can be used to define different rate limiting rules to different routes/controllers.
 
-When setting up `nestjs-rate-limiter`, you should make sure that any `keyPrefix` values are unique. If they are not
+When setting up `nestjs-rate-limit`, you should make sure that any `keyPrefix` values are unique. If they are not
 unique, then they will share the same rate limit.
 
 By default, if you don't set this up, the underlying library will use a `keyPrefix` of `rlflx`. When using the
