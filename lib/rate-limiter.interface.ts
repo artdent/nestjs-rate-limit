@@ -1,11 +1,11 @@
 import { ModuleMetadata, Type } from '@nestjs/common/interfaces';
 
-import { IRateLimiterOptions } from 'rate-limiter-flexible';
+import { IRateLimiterMongoOptions } from 'rate-limiter-flexible';
 import { Provider } from '@nestjs/common';
 
 export type RateLimiterType = 'Redis' | 'Memcache' | 'Postgres' | 'MySQL' | 'Memory';
 
-export interface RateLimiterModuleOptions extends Partial<IRateLimiterOptions> {
+export interface RateLimiterModuleOptions extends Partial<IRateLimiterMongoOptions> {
     type?: RateLimiterType;
     pointsConsumed?: number;
 }
