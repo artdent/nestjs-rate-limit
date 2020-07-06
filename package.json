@@ -48,7 +48,7 @@
         ]
     },
     "dependencies": {
-        "rate-limiter-flexible": "^1.0.2"
+        "rate-limiter-flexible": "^2.1.7"
     },
     "devDependencies": {
         "@commitlint/cli": "^8.0.0",
