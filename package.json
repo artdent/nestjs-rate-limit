@@ -31,7 +31,7 @@
         "build": "tsc -p tsconfig.json",
         "test": "jest --passWithNoTests .spec.ts",
         "prepublishOnly": "npm run build",
-        "release": "np"
+        "release": "np --no-cleanup"
     },
     "husky": {
         "hooks": {
