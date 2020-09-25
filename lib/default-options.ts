@@ -5,4 +5,5 @@ export const defaultRateLimiterOptions: RateLimiterModuleOptions = {
     points: 4,
     duration: 1,
     pointsConsumed: 1,
+    headers: true,
 };

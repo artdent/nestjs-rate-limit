@@ -120,26 +120,31 @@ describe('service', () => {
         it('should set headers', async () => {
             executionContext = fakeExecutionContext(undefined, { header: jest.fn() }) as any;
             await rateLimiterService.executeRateLimiter(executionContext);
-            expect(executionContext.switchToHttp().getResponse().set).toHaveBeenNthCalledWith(
-                1,
+            expect(executionContext.switchToHttp().getResponse().set).toHaveBeenCalledTimes(4);
+            expect(executionContext.switchToHttp().getResponse().set).toHaveBeenCalledWith(
                 'Retry-After',
                 expect.anything(),
             );
-            expect(executionContext.switchToHttp().getResponse().set).toHaveBeenNthCalledWith(
-                2,
+            expect(executionContext.switchToHttp().getResponse().set).toHaveBeenCalledWith(
                 'X-RateLimit-Limit',
                 expect.anything(),
             );
-            expect(executionContext.switchToHttp().getResponse().set).toHaveBeenNthCalledWith(
-                3,
+            expect(executionContext.switchToHttp().getResponse().set).toHaveBeenCalledWith(
                 'X-Retry-Remaining',
                 undefined,
             );
-            expect(executionContext.switchToHttp().getResponse().set).toHaveBeenNthCalledWith(
-                4,
+            expect(executionContext.switchToHttp().getResponse().set).toHaveBeenCalledWith(
                 'X-Retry-Reset',
                 expect.anything(),
             );
+        });
+
+        it('should not set headers if headers option is false', async () => {
+            const mockOptions = { headers: false };
+            reflector.get = jest.fn(() => mockOptions) as any;
+            executionContext = fakeExecutionContext(undefined, { header: jest.fn() }) as any;
+            await rateLimiterService.executeRateLimiter(executionContext);
+            expect(executionContext.switchToHttp().getResponse().set).not.toHaveBeenCalled();
         });
 
         it('should throw TooManyRequests exception if rate limit exceeded', async () => {

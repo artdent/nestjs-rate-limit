@@ -42,7 +42,7 @@ export class RateLimiterService {
                 rateLimiter = new RateLimiterMemcache(libraryArguments as IRateLimiterStoreOptions);
             } else if (limiterOptions.type === 'Postgres') {
                 rateLimiter = await new Promise((resolve, reject) => {
-                    const limiter = new RateLimiterPostgres(libraryArguments as IRateLimiterStoreOptions, err => {
+                    const limiter = new RateLimiterPostgres(libraryArguments as IRateLimiterStoreOptions, (err) => {
                         if (err) {
                             reject(err);
                         } else {
@@ -52,7 +52,7 @@ export class RateLimiterService {
                 });
             } else if (limiterOptions.type === 'MySQL') {
                 rateLimiter = await new Promise((resolve, reject) => {
-                    const limiter = new RateLimiterMySQL(libraryArguments as IRateLimiterStoreOptions, err => {
+                    const limiter = new RateLimiterMySQL(libraryArguments as IRateLimiterStoreOptions, (err) => {
                         if (err) {
                             reject(err);
                         } else {
@@ -71,32 +71,21 @@ export class RateLimiterService {
     }
 
     async executeRateLimiter(context: ExecutionContext): Promise<void> {
-        let points: number = this.options.points;
-        let pointsConsumed: number = this.options.pointsConsumed;
-        let keyPrefix: string = this.options.keyPrefix;
+        const reflectedOptions: RateLimiterModuleOptions =
+            this.reflector.get<RateLimiterModuleOptions>(RATE_LIMITER_TOKEN, context.getHandler()) ?? {};
 
-        const reflectedOptions: RateLimiterModuleOptions = this.reflector.get<RateLimiterModuleOptions>(
-            RATE_LIMITER_TOKEN,
-            context.getHandler(),
-        );
+        const points: number = reflectedOptions.points ?? this.options.points;
+        const pointsConsumed: number = reflectedOptions.pointsConsumed ?? this.options.pointsConsumed;
+        const sendHeaders = reflectedOptions.headers ?? this.options.headers;
 
-        if (reflectedOptions) {
-            if (reflectedOptions.points) {
-                points = reflectedOptions.points;
-            }
+        let keyPrefix: string;
+        if (reflectedOptions.keyPrefix) {
+            keyPrefix = reflectedOptions.keyPrefix;
+        } else {
+            keyPrefix = context.getClass().name;
 
-            if (reflectedOptions.pointsConsumed) {
-                pointsConsumed = reflectedOptions.pointsConsumed;
-            }
-
-            if (reflectedOptions.keyPrefix) {
-                keyPrefix = reflectedOptions.keyPrefix;
-            } else {
-                keyPrefix = context.getClass().name;
-
-                if (context.getHandler()) {
-                    keyPrefix += `-${context.getHandler().name}`;
-                }
+            if (context.getHandler()) {
+                keyPrefix += `-${context.getHandler().name}`;
             }
         }
 
@@ -113,10 +102,12 @@ export class RateLimiterService {
         try {
             const rateLimiterResponse: RateLimiterRes = await rateLimiter.consume(key, pointsConsumed);
 
-            response.set('Retry-After', Math.ceil(rateLimiterResponse.msBeforeNext / 1000));
-            response.set('X-RateLimit-Limit', points);
-            response.set('X-Retry-Remaining', rateLimiterResponse.remainingPoints);
-            response.set('X-Retry-Reset', new Date(Date.now() + rateLimiterResponse.msBeforeNext).toUTCString());
+            if (sendHeaders) {
+                response.set('Retry-After', Math.ceil(rateLimiterResponse.msBeforeNext / 1000));
+                response.set('X-RateLimit-Limit', points);
+                response.set('X-Retry-Remaining', rateLimiterResponse.remainingPoints);
+                response.set('X-Retry-Reset', new Date(Date.now() + rateLimiterResponse.msBeforeNext).toUTCString());
+            }
         } catch (rateLimiterResponse) {
             if (rateLimiterResponse instanceof Error) {
                 throw rateLimiterResponse;
