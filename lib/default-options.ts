@@ -6,4 +6,5 @@ export const defaultRateLimiterOptions: RateLimiterModuleOptions = {
     duration: 1,
     pointsConsumed: 1,
     headers: true,
+    keyGenerator: (request: any) => (request.user ? request.user.id : request.ip),
 };

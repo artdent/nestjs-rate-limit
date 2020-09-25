@@ -273,6 +273,12 @@ route, it will be a combination of the controllers name and the route functions 
 If true (the default), the rate limiter will send response headers: `Retry-After`, `X-RateLimit-Limit`,
 `X-Retry-Remaining`, and `X-Retry-Reset`.
 
+### keyGenerator: (request: any) => string
+
+This defines how the rate limiter will extract the unique key for each request. The default implementation
+uses `request.user.id` if `request.user` is present, otherwise it uses `request.ip`. This can be overridden
+if users are uniquely identified in some other manner on the request object.
+
 ## Examples
 
 ### With Redis

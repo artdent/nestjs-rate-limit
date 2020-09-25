@@ -77,6 +77,7 @@ export class RateLimiterService {
         const points: number = reflectedOptions.points ?? this.options.points;
         const pointsConsumed: number = reflectedOptions.pointsConsumed ?? this.options.pointsConsumed;
         const sendHeaders = reflectedOptions.headers ?? this.options.headers;
+        const keyGenerator = reflectedOptions.keyGenerator ?? this.options.keyGenerator;
 
         let keyPrefix: string;
         if (reflectedOptions.keyPrefix) {
@@ -97,7 +98,7 @@ export class RateLimiterService {
         if (!response.set && response.header) response.set = response.header;
         else if (!response.set) throw new Error('Cannot determine method to set response headers');
 
-        const key = request.user ? request.user.id : request.ip;
+        const key = keyGenerator(request);
 
         try {
             const rateLimiterResponse: RateLimiterRes = await rateLimiter.consume(key, pointsConsumed);

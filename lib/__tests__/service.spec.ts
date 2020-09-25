@@ -117,6 +117,20 @@ describe('service', () => {
             );
         });
 
+        it('should use keyGenerator option to generate key if specified', async () => {
+            const mockOptions = {
+                keyGenerator: (request: any) => request.accountId,
+            };
+            reflector.get = jest.fn(() => mockOptions) as any;
+            executionContext = fakeExecutionContext({ accountId: 'account-id' }) as any;
+            const consumeMock = jest.fn(() => ({ msBeforeNext: 1000 }));
+            rateLimiterService.getRateLimiter = jest.fn(() => ({
+                consume: consumeMock,
+            })) as any;
+            await rateLimiterService.executeRateLimiter(executionContext);
+            expect(consumeMock).toHaveBeenCalledWith('account-id', expect.anything());
+        });
+
         it('should set headers', async () => {
             executionContext = fakeExecutionContext(undefined, { header: jest.fn() }) as any;
             await rateLimiterService.executeRateLimiter(executionContext);

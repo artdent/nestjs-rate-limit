@@ -9,6 +9,7 @@ export interface RateLimiterModuleOptions extends Partial<IRateLimiterMongoOptio
     type?: RateLimiterType;
     pointsConsumed?: number;
     headers?: boolean;
+    keyGenerator?: (req: any) => string;
 }
 
 export interface RateLimiterOptionsFactory {
