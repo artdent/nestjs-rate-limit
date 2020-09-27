@@ -95,8 +95,14 @@ export class RateLimiterService {
         const request = context.switchToHttp().getRequest();
         const response = context.switchToHttp().getResponse();
 
-        if (!response.set && response.header) response.set = response.header;
-        else if (!response.set) throw new Error('Cannot determine method to set response headers');
+        let setHeader: (header: string, value: any) => void;
+        if (response.set) {
+            setHeader = response.set.bind(response);
+        } else if (response.header) {
+            setHeader = response.header.bind(response);
+        } else {
+            throw new Error('Cannot determine method to set response headers');
+        }
 
         const key = keyGenerator(request);
 
@@ -104,17 +110,17 @@ export class RateLimiterService {
             const rateLimiterResponse: RateLimiterRes = await rateLimiter.consume(key, pointsConsumed);
 
             if (sendHeaders) {
-                response.set('Retry-After', Math.ceil(rateLimiterResponse.msBeforeNext / 1000));
-                response.set('X-RateLimit-Limit', points);
-                response.set('X-Retry-Remaining', rateLimiterResponse.remainingPoints);
-                response.set('X-Retry-Reset', new Date(Date.now() + rateLimiterResponse.msBeforeNext).toUTCString());
+                setHeader('Retry-After', Math.ceil(rateLimiterResponse.msBeforeNext / 1000));
+                setHeader('X-RateLimit-Limit', points);
+                setHeader('X-Retry-Remaining', rateLimiterResponse.remainingPoints);
+                setHeader('X-Retry-Reset', new Date(Date.now() + rateLimiterResponse.msBeforeNext).toUTCString());
             }
         } catch (rateLimiterResponse) {
             if (rateLimiterResponse instanceof Error) {
                 throw rateLimiterResponse;
             }
 
-            response.set('Retry-After', Math.ceil(rateLimiterResponse.msBeforeNext / 1000));
+            setHeader('Retry-After', Math.ceil(rateLimiterResponse.msBeforeNext / 1000));
             throw new HttpException('Rate limit exceeded', HttpStatus.TOO_MANY_REQUESTS);
         }
     }

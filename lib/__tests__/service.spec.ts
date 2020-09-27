@@ -78,7 +78,7 @@ describe('service', () => {
             expect(executionContext.switchToHttp().getResponse().header).not.toHaveBeenCalled();
         });
 
-        it('should use response.set if defined and response.set is not (Fastify)', async () => {
+        it('should use response.header if defined and response.set is not (Fastify)', async () => {
             executionContext = fakeExecutionContext(undefined, { header: jest.fn() }) as any;
             await rateLimiterService.executeRateLimiter(executionContext);
             expect(executionContext.switchToHttp().getResponse().header).toHaveBeenCalled();
@@ -134,20 +134,20 @@ describe('service', () => {
         it('should set headers', async () => {
             executionContext = fakeExecutionContext(undefined, { header: jest.fn() }) as any;
             await rateLimiterService.executeRateLimiter(executionContext);
-            expect(executionContext.switchToHttp().getResponse().set).toHaveBeenCalledTimes(4);
-            expect(executionContext.switchToHttp().getResponse().set).toHaveBeenCalledWith(
+            expect(executionContext.switchToHttp().getResponse().header).toHaveBeenCalledTimes(4);
+            expect(executionContext.switchToHttp().getResponse().header).toHaveBeenCalledWith(
                 'Retry-After',
                 expect.anything(),
             );
-            expect(executionContext.switchToHttp().getResponse().set).toHaveBeenCalledWith(
+            expect(executionContext.switchToHttp().getResponse().header).toHaveBeenCalledWith(
                 'X-RateLimit-Limit',
                 expect.anything(),
             );
-            expect(executionContext.switchToHttp().getResponse().set).toHaveBeenCalledWith(
+            expect(executionContext.switchToHttp().getResponse().header).toHaveBeenCalledWith(
                 'X-Retry-Remaining',
                 undefined,
             );
-            expect(executionContext.switchToHttp().getResponse().set).toHaveBeenCalledWith(
+            expect(executionContext.switchToHttp().getResponse().header).toHaveBeenCalledWith(
                 'X-Retry-Reset',
                 expect.anything(),
             );
@@ -158,7 +158,7 @@ describe('service', () => {
             reflector.get = jest.fn(() => mockOptions) as any;
             executionContext = fakeExecutionContext(undefined, { header: jest.fn() }) as any;
             await rateLimiterService.executeRateLimiter(executionContext);
-            expect(executionContext.switchToHttp().getResponse().set).not.toHaveBeenCalled();
+            expect(executionContext.switchToHttp().getResponse().header).not.toHaveBeenCalled();
         });
 
         it('should throw TooManyRequests exception if rate limit exceeded', async () => {
